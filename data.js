@@ -3,6 +3,10 @@
 
 const flashcardsData = [
     {
+        questionImage: './images/2add7.jpg',
+        answerText: '９',
+    },
+    {
         questionImage: './images/5add2.jpg',
         answerText: '７',
     },
