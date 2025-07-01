@@ -22,5 +22,3 @@ for (const x of firstNumbers) {
         });
     }
 }
-
-];
