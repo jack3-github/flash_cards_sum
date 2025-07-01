@@ -79,7 +79,8 @@ function speakText(text) {
     if (synth.speaking) {
         // すでに読み上げ中であれば停止
         synth.cancel();
-
+    }
+    
     const utterance = new SpeechSynthesisUtterance(text);
 
     const japaneseVoice = voices.find(voice => voice.lang === 'ja-JP' || voice.lang.startsWith('ja-'));
