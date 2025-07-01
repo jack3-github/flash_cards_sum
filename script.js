@@ -77,9 +77,9 @@ function speakText(text) {
     const utterance = new SpeechSynthesisUtterance(text);
 
     // 英語のボイスを探して設定（'en-US'などの言語コード）
-    const englishVoice = voices.find(voice => voice.lang === 'en-US' || voice.lang.startsWith('en-'));
-    if (englishVoice) {
-        utterance.voice = englishVoice;
+    const japaneseVoice  = voices.find(voice => voice.lang === 'ja-JP' || voice.lang.startsWith('ja-'));
+    if (japaneseVoice ) {
+        utterance.voice = japaneseVoice ;
     } else {
         // 適切な英語ボイスが見つからない場合、デフォルトのボイスを使用
         console.warn("英語のボイスが見つかりませんでした。デフォルトのボイスを使用します。");
