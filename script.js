@@ -76,44 +76,22 @@ function showAnswerAndSpeak() {
 
 // Web Speech APIを使ってテキストを読み上げる関数
 function speakText(text) {
-    if (!synth) { // synth が初期化されているか確認
-        console.error("SpeechSynthesis API が利用できません。");
-        return;
-    }
     if (synth.speaking) {
         // すでに読み上げ中であれば停止
         synth.cancel();
-    }
+
     const utterance = new SpeechSynthesisUtterance(text);
 
-    // 日本語のボイスを探して設定
-    // voice.langが'ja-JP'であるか、'ja-'で始まるボイスを探します。
-    const japaneseVoice  = voices.find(voice => 
-        voice.lang === 'ja-JP' || voice.lang.startsWith('ja-')
-    );
-    
-    if (japaneseVoice ) {
-        utterance.voice = japaneseVoice ;
+    const japaneseVoice = voices.find(voice => voice.lang === 'ja-JP' || voice.lang.startsWith('ja-'));
+    if (japaneseVoice) {
+        utterance.voice = japaneseVoice;
     } else {
-        // 適切な日本語ボイスが見つからない場合、利用可能な最初のボイスを使用
-        // または、ボイスが全くない場合は発音機能は動作しません。
-        if (voices.length > 0) {
-            utterance.voice = voices[0]; 
-            console.warn("適切な日本語ボイスが見つかりませんでした。利用可能な最初のボイスを使用します。");
-        } else {
-            console.warn("利用可能なボイスが全くありません。発音機能は動作しません。");
-            return; // ボイスがなければ再生しない
-        }
+        // 適切な英語ボイスが見つからない場合、デフォルトのボイスを使用
+        console.warn("英語のボイスが見つかりませんでした。デフォルトのボイスを使用します。");
     }
 
     utterance.rate = 1.0; // 読み上げ速度（0.1から10.0、デフォルト1.0）
     utterance.pitch = 1.0; // ピッチ（0.0から2.0、デフォルト1.0）
-
-    // エラーハンドリングを追加（より確実にするため）
-    utterance.onerror = (event) => {
-        console.error('SpeechSynthesisUtterance error:', event);
-        console.error('Error name:', event.error); // エラーの種類（e.g., 'not-allowed', 'network'など）
-    };
 
     // 読み上げ開始
     synth.speak(utterance);
