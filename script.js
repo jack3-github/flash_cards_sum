@@ -9,7 +9,7 @@ let currentCardIndex = 0;
 // DOM要素の取得
 const questionImage = document.getElementById('question-image');
 const answerText = document.getElementById('answer-text');
-const playAudioBtn = document.getElementById('play-audio-btn'); // 発音ボタン
+// const playAudioBtn = document.getElementById('play-audio-btn'); // 発音ボタン -> 削除またはコメントアウト
 const showAnswerBtn = document.getElementById('show-answer-btn');
 const nextBtn = document.getElementById('next-btn');
 
@@ -50,7 +50,7 @@ function displayFlashcard() {
         questionImage.src = ''; // 画像をクリア
         answerText.textContent = '問題データがありません。data.jsを確認してください。';
         answerText.classList.remove('hidden'); // hiddenを解除してメッセージを表示
-        playAudioBtn.disabled = true; // ボタンを無効化
+        // playAudioBtn.disabled = true; // ボタンを無効化 -> 削除またはコメントアウト
         return;
     }
 
@@ -59,34 +59,61 @@ function displayFlashcard() {
     answerText.textContent = card.answerText;
     answerText.classList.add('hidden'); // 回答を非表示にする
 
-    // 発音ボタンを有効化
-    playAudioBtn.disabled = false;
+    // 発音ボタン（もし残すなら）を有効化 -> showAnswerBtn に集約されたので不要
+    // playAudioBtn.disabled = false;
 }
 
-// 答えを表示する関数
-function showAnswer() {
+// 答えを表示し、かつ読み上げる関数
+function showAnswerAndSpeak() {
     answerText.classList.remove('hidden'); // hidden を解除して答えを表示
+
+    // 答えが表示されたら、その内容を読み上げる
+    const currentCardAnswer = flashcardsShuffled[currentCardIndex]?.answerText;
+    if (currentCardAnswer) {
+        speakText(currentCardAnswer);
+    }
 }
 
 // Web Speech APIを使ってテキストを読み上げる関数
 function speakText(text) {
+    if (!synth) { // synth が初期化されているか確認
+        console.error("SpeechSynthesis API が利用できません。");
+        return;
+    }
     if (synth.speaking) {
         // すでに読み上げ中であれば停止
         synth.cancel();
     }
     const utterance = new SpeechSynthesisUtterance(text);
 
-    // 英語のボイスを探して設定（'en-US'などの言語コード）
-    const japaneseVoice  = voices.find(voice => voice.lang === 'ja-JP' || voice.lang.startsWith('ja-'));
+    // 日本語のボイスを探して設定
+    // voice.langが'ja-JP'であるか、'ja-'で始まるボイスを探します。
+    const japaneseVoice  = voices.find(voice => 
+        voice.lang === 'ja-JP' || voice.lang.startsWith('ja-')
+    );
+    
     if (japaneseVoice ) {
         utterance.voice = japaneseVoice ;
     } else {
-        // 適切な英語ボイスが見つからない場合、デフォルトのボイスを使用
-        console.warn("英語のボイスが見つかりませんでした。デフォルトのボイスを使用します。");
+        // 適切な日本語ボイスが見つからない場合、利用可能な最初のボイスを使用
+        // または、ボイスが全くない場合は発音機能は動作しません。
+        if (voices.length > 0) {
+            utterance.voice = voices[0]; 
+            console.warn("適切な日本語ボイスが見つかりませんでした。利用可能な最初のボイスを使用します。");
+        } else {
+            console.warn("利用可能なボイスが全くありません。発音機能は動作しません。");
+            return; // ボイスがなければ再生しない
+        }
     }
 
     utterance.rate = 1.0; // 読み上げ速度（0.1から10.0、デフォルト1.0）
     utterance.pitch = 1.0; // ピッチ（0.0から2.0、デフォルト1.0）
+
+    // エラーハンドリングを追加（より確実にするため）
+    utterance.onerror = (event) => {
+        console.error('SpeechSynthesisUtterance error:', event);
+        console.error('Error name:', event.error); // エラーの種類（e.g., 'not-allowed', 'network'など）
+    };
 
     // 読み上げ開始
     synth.speak(utterance);
@@ -105,20 +132,14 @@ function nextFlashcard() {
 
 // --- イベントリスナー ---
 
-// 「発音を聞く」ボタンがクリックされたら、現在の回答テキストを読み上げる
-playAudioBtn.addEventListener('click', () => {
-    // 答えが表示されていなくても発音できるように、現在のカードの答えを取得
-    const currentCardAnswer = flashcardsShuffled[currentCardIndex]?.answerText;
-    if (currentCardAnswer) {
-        speakText(currentCardAnswer);
-    }
-});
+// 「発音を聞く」ボタンのイベントリスナーは削除（showAnswerAndSpeakに統合）
+// playAudioBtn.addEventListener('click', () => { ... });
 
-// 「答えを見る」ボタンがクリックされたら
-showAnswerBtn.addEventListener('click', showAnswer);
+// 「答えを見る」ボタンがクリックされたら、答えを表示して読み上げる
+showAnswerBtn.addEventListener('click', showAnswerAndSpeak);
 
 // 「次の問題」ボタンがクリックされたら
-nextBtn.addEventListener('click', nextFlashcard); // ★ここが追加されました
+nextBtn.addEventListener('click', nextFlashcard);
 
 
 // --- 初期表示 ---
@@ -132,5 +153,5 @@ if (flashcardsData && flashcardsData.length > 0) {
     questionImage.src = '';
     answerText.textContent = '問題データがありません。data.jsを確認してください。';
     answerText.classList.remove('hidden'); // hiddenを解除してメッセージを表示
-    playAudioBtn.disabled = true; // データがなければボタンを無効化
+    // playAudioBtn.disabled = true; // データがなければボタンを無効化 -> 削除またはコメントアウト
 }
